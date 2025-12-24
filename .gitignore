@@ -1,0 +1,26 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Docker
+.dockerignore
+
+# Rails
+rails-api/log/*
+rails-api/tmp/*
+rails-api/storage/*
+
+# Go
+go-processor/processor
+go-processor/*.test
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
