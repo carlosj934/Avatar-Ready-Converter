@@ -12,8 +12,15 @@ Rails.application.configure do
   # Full error reports are disabled.
   config.consider_all_requests_local = false
 
-  # Cache assets for far-future expiry since they are all digest stamped.
-  config.public_file_server.headers = { "cache-control" => "public, max-age=#{1.year.to_i}" }
+  # turn on fragment caching in view temps
+  config.action_controller.perform_caching = true
+
+  # ensures that master key has been made available
+  config.require_master_key = false
+
+  # Disable serving static files from `public/`, use Rails to serve instead
+  # This is needed since we don't have nginx/apache in front
+  config.public_file_server.enabled = ENV["RAILS_SERVE_STATIC_FILES"].present? 
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
@@ -28,11 +35,18 @@ Rails.application.configure do
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 
   # Log to STDOUT with the current request id as a default log tag.
-  config.log_tags = [ :request_id ]
-  config.logger   = ActiveSupport::TaggedLogging.logger(STDOUT)
+  config.logger = ActiveSupport::Logger.new(STDOUT)
+    .tap  { |logger| logger.formatter = ::Logger::Formatter.new }
+    .then { |logger| ActiveSupport::TaggedLogging.new(logger) }
 
   # Change to "debug" to log everything (including potentially personally-identifiable information!).
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
+
+  # prepend all log files with the following tags
+  config.log_tags = [ :request_id ]
+
+  # disable caching for now
+  config.cache_store = :memory_store
 
   # Prevent health checks from clogging up the logs.
   config.silence_healthcheck_path = "/up"
@@ -65,6 +79,16 @@ Rails.application.configure do
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
   config.i18n.fallbacks = true
+
+  # skip DNS rebinding protection by rendering 400 response
+  # we need to allow all hosts til we know the deployment domain
+  config.hosts.clear
+
+  # default logging formatter
+  config.log_formatter = ::Logger::Formatter.new
+
+  # use mem store for rack-attack cache 
+  config.cache_store = :memory_store
 
   # Enable DNS rebinding protection and other `Host` header attacks.
   # config.hosts = [
